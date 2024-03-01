@@ -1,8 +1,8 @@
-import { Project } from "./class/Project"
+import { Project, IProject, ProjectStatus, UserRole } from "./class/Project"
 //
-function showModal(id){
+function showModal(id: string){
     const modal = document.getElementById(id)
-    if(modal){
+    if(modal && modal instanceof HTMLDialogElement){
         modal.showModal()
     }else{
         console.warn("The provided modal wasn't found. ID: ", id)
@@ -17,16 +17,16 @@ if(newProjectBtn){
 }
 // Form
 const projectForm = document.getElementById("new-project-form")
-if (projectForm) {
+if (projectForm && projectForm instanceof HTMLFormElement) {
     projectForm.addEventListener("submit", (e) => {
         e.preventDefault()
         const formData = new FormData(projectForm)
-        const projectData = {
-            name: formData.get("name"),
-            description: formData.get("description"),
-            status: formData.get("status"),
-            userRole: formData.get("userRole"),
-            finishDate: formData.get("finishDate")
+        const projectData: IProject = {
+            name: formData.get("name") as string,
+            description: formData.get("description") as string,
+            status: formData.get("status") as ProjectStatus,
+            userRole: formData.get("userRole") as UserRole,
+            finishDate: new Date(formData.get("finishDate") as string)
         }
         const project = new Project(projectData)
         console.log(project)
