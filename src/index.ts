@@ -1,4 +1,5 @@
-import { Project, IProject, ProjectStatus, UserRole } from "./class/Project"
+import { IProject, ProjectStatus, UserRole } from "./class/Project"
+import { ProjectsManager } from "./class/ProjectsManager"
 //
 function showModal(id: string){
     const modal = document.getElementById(id)
@@ -8,6 +9,19 @@ function showModal(id: string){
         console.warn("The provided modal wasn't found. ID: ", id)
     }
 }
+function closeModal(id: string){
+    const modal = document.getElementById(id)
+    if(modal && modal instanceof HTMLDialogElement){
+        modal.close()
+    }else{
+        console.warn("The provided modal wasn't found. ID: ", id)
+    }
+}
+
+// list and projectsManager
+const projectListUI = document.getElementById("projects-list") as HTMLElement
+const projectsManager = new ProjectsManager(projectListUI)
+
 //Btn form click
 const newProjectBtn = document.getElementById("new-project-btn")
 if(newProjectBtn){
@@ -28,8 +42,14 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
             userRole: formData.get("userRole") as UserRole,
             finishDate: new Date(formData.get("finishDate") as string)
         }
-        const project = new Project(projectData)
-        console.log(project)
+        try {
+            const project = projectsManager.newProject(projectData)
+            projectForm.reset()
+            closeModal("new-project-modal")
+            
+        } catch (err) {
+            alert(err)
+        }
     })
 }else{
     console.warn("The project form was not found. Check the ID!")
