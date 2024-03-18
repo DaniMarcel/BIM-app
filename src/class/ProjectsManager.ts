@@ -23,10 +23,18 @@ export class ProjectsManager{
             if (!(projectsPage && detailsPage)) { return }
             projectsPage.style.display = "none"
             detailsPage.style.display = "flex"
+            this.setDetailsPage(project)
         })
         this.ui.append(project.ui)
         this.list.push(project)
         return project
+    }
+
+    private setDetailsPage(project: Project){
+        const detailsPage = document.getElementById("project-details")
+        if (!detailsPage) { return }
+        const name = detailsPage.querySelector("[data-project-info='name']")
+        if (name) { name.textContent = project.name }
     }
 
 
