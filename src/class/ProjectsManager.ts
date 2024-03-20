@@ -30,11 +30,16 @@ export class ProjectsManager{
         return project
     }
 
-    private setDetailsPage(project: Project){
+    private setDetailsPage(project: Project) {
         const detailsPage = document.getElementById("project-details")
         if (!detailsPage) { return }
         const name = detailsPage.querySelector("[data-project-info='name']")
         if (name) { name.textContent = project.name }
+        const description = detailsPage.querySelector("[data-project-info='description']")
+        if (description) { description.textContent = project.description }
+        const cardName = detailsPage.querySelector("[data-project-info='cardName']")
+        if (cardName) { cardName.textContent = project.name }
+        const cardDescription = detailsPage.querySelector("[data-project-info='cardDescription']")
     }
 
 
