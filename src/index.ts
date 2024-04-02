@@ -1,3 +1,5 @@
+import * as THREE from "three"
+import { OrbitControls } from "three/examples/jsm/controls/OrbitControls" 
 import { IProject, ProjectStatus, UserRole } from "./class/Project"
 import { ProjectsManager } from "./class/ProjectsManager"
 //
@@ -9,6 +11,7 @@ function showModal(id: string){
         console.warn("The provided modal wasn't found. ID: ", id)
     }
 }
+
 function closeModal(id: string){
     const modal = document.getElementById(id)
     if(modal && modal instanceof HTMLDialogElement){
@@ -17,7 +20,6 @@ function closeModal(id: string){
         console.warn("The provided modal wasn't found. ID: ", id)
     }
 }
-
 // list and projectsManager
 const projectListUI = document.getElementById("projects-list") as HTMLElement
 const projectsManager = new ProjectsManager(projectListUI)
@@ -44,9 +46,9 @@ if (projectForm && projectForm instanceof HTMLFormElement) {
         }
         try {
             const project = projectsManager.newProject(projectData)
+            console.log(project)
             projectForm.reset()
             closeModal("new-project-modal")
-            
         } catch (err) {
             alert(err)
         }
@@ -68,3 +70,36 @@ if (importProjectsBtn) {
         projectsManager.importFromJSON()
     })
 }
+
+// ThreeJS Viewer
+const scene = new THREE.Scene()
+
+const viewerContainer = document.getElementById("viewer-container") as HTMLElement
+const containerDimensions = viewerContainer.getBoundingClientRect()
+const aspectRatio = containerDimensions.width / containerDimensions.height
+const camera = new THREE.PerspectiveCamera(75, aspectRatio)
+camera.position.z = 5
+
+const renderer = new THREE.WebGLRenderer()
+viewerContainer.append(renderer.domElement)
+renderer.setSize(containerDimensions.width, containerDimensions.height)
+
+
+const BoxGeometry = new THREE.BoxGeometry()
+const material = new THREE.MeshStandardMaterial()
+const cube = new THREE.Mesh(BoxGeometry, material)
+
+const directionalLight = new THREE.DirectionalLight()
+const ambientLight = new THREE.AmbientLight()
+ambientLight.intensity = 0.4
+
+scene.add(cube, directionalLight, ambientLight)
+
+const cameraControls = new OrbitControls(camera, viewerContainer)
+
+function renderScene(){
+    renderer.render(scene, camera)
+    requestAnimationFrame(renderScene)
+}
+
+renderScene()
