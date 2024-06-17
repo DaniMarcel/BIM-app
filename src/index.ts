@@ -1,5 +1,6 @@
 import * as THREE from "three"
 import * as OBC from "openbim-components"
+import { FragmentsGroup } from "bim-fragment"
 import { GUI } from "three/examples/jsm/libs/lil-gui.module.min"
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls"
 import { OBJLoader } from "three/examples/jsm/loaders/OBJLoader"
@@ -103,9 +104,23 @@ viewer.raycaster = raycasterComponent
 
 //inicializacion, correction camera, sombra
 viewer.init()
-cameraComponent.updateAspect()
+cameraComponent.updateAspect() // Correccion de camara
 rendererComponent.postproduction.enabled = true
 
+// obtiene una lista de los fragmentos cargados
+const fragmentManager = new OBC.FragmentManager(viewer)
+function exportFragments(model: FragmentsGroup){
+    const fragmentBinary = fragmentManager.export(model)
+    const blob = new Blob([fragmentBinary])
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `${model.name.replace(".ifc", "")}.frag`
+    a.click()
+    URL.revokeObjectURL(url)
+}
+
+// Modelos IFC se combiente en fragmentos 
 const ifcLoader = new OBC.FragmentIfcLoader(viewer)
 // ruta absoluta biblioteca WebIFC
 ifcLoader.settings.wasm = {
@@ -129,11 +144,13 @@ const classificationWindow = new OBC.FloatingWindow(viewer)
 classificationWindow.visible = false
 viewer.ui.add(classificationWindow)
 classificationWindow.title = "Grupo de Modelos"
-
-// boton ocultar window
+// Boton de los modelos propiedades
 const classificationsBtn = new OBC.Button(viewer)
 classificationsBtn.materialIcon = "account_tree"
+classificationsBtn.tooltip = "Three Models"
 
+
+// Boton ocultar window
 classificationsBtn.onClick.add(() => {
     classificationWindow.visible = !classificationWindow.visible
     classificationsBtn.active = classificationWindow.visible
@@ -154,29 +171,70 @@ async function createModelTree(){
     return tree
 }
 
-ifcLoader.onIfcLoaded.add(async (model) => {
+async function onModelLoaded(model: FragmentsGroup){
     // highlighter resaltador elemnto seleccionado
     highlighter.update()
-    // Claseficar modelos en grupos
-    classifier.byStorey(model)
-    classifier.byEntity(model)
-    const tree = await createModelTree()
-    // Agrupar las propiedades de los modelos
-    await classificationWindow.slots.content.dispose(true)
-    classificationWindow.addChild(tree)
 
-    // Propiedades de modelo seleccionado a traves de expresID con highlighter
-    propertiesProcessor.process(model)
-    highlighter.events.select.onHighlight.add((fragmentMap) =>{
-        const expressID = [...Object.values(fragmentMap)[0]][0]
-        propertiesProcessor.renderProperties(model, Number(expressID))
-    })
+    try {
+        // Claseficar modelos en grupos
+        classifier.byStorey(model)
+        classifier.byEntity(model)
+        const tree = await createModelTree()
+        // Agrupar las propiedades de los modelos
+        await classificationWindow.slots.content.dispose(true)
+        classificationWindow.addChild(tree)
+    
+        // Propiedades de modelo seleccionado a traves de expresID con highlighter
+        propertiesProcessor.process(model)
+        highlighter.events.select.onHighlight.add((fragmentMap) =>{
+            const expressID = [...Object.values(fragmentMap)[0]][0]
+            propertiesProcessor.renderProperties(model, Number(expressID))
+        })
+    } catch (error) {
+        alert(error)
+    }
+}
+
+ifcLoader.onIfcLoaded.add(async (model) => {
+    exportFragments(model)
+    onModelLoaded(model)
 })
+
+fragmentManager.onFragmentsLoaded.add((model) =>{
+    model.properties = {}
+    onModelLoaded(model)
+})
+
+// Frag
+const importFragmentBtn = new OBC.Button(viewer)
+importFragmentBtn.materialIcon = "upload"
+importFragmentBtn.tooltip = "Load FRAG"
+// IMPORT FRAG
+importFragmentBtn.onClick.add(() =>{
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = '.frag'
+    const reader = new FileReader()
+    reader.addEventListener("load", async() => {
+        const binary = reader.result
+        if (!(binary instanceof ArrayBuffer)) { return }
+        const fragmentBinary = new Uint8Array(binary)
+        await fragmentManager.load(fragmentBinary)
+    })
+    input.addEventListener('change', () => {
+        const filesList = input.files
+        if (!filesList) { return }
+        reader.readAsArrayBuffer(filesList[0])
+    })
+    input.click()
+})
+
 
 // Tools bar
 const toolbar = new OBC.Toolbar(viewer)
 toolbar.addChild(
     ifcLoader.uiElement.get("main"),
+    importFragmentBtn,
     classificationsBtn,
     propertiesProcessor.uiElement.get("main")
 )
