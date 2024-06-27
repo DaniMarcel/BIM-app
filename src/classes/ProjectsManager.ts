@@ -15,6 +15,13 @@ export class ProjectsManager{
         })
     }
 
+    filterProjects(value: string) {
+        const filteredProjects = this.list.filter((project) => {
+            return project.name.includes(value)
+        })
+        return filteredProjects
+    }
+
     newProject(data: IProject){
         //find name project
         const projectNames = this.list.map((project) =>{
