@@ -1,8 +1,9 @@
 import * as OBC from "openbim-components"
 
 export class TodoCard extends OBC.SimpleUIComponent {
-
   onCardClick = new OBC.Event()
+  onDeleteClick = new OBC.Event() // Añadir evento para eliminar
+
   slots: {
     actionButtons: OBC.SimpleUIComponent
   }
@@ -24,7 +25,7 @@ export class TodoCard extends OBC.SimpleUIComponent {
           <div style="display: flex; column-gap: 15px; align-items: center;">
             <span class="material-icons-round" style="padding: 10px; background-color: #686868; border-radius: 10px;">construction</span>
             <div>
-            <p id="date" style="text-wrap: nowrap; color: #a9a9a9; font-size: var(--font-sm)">Fri, 20 sep</p>
+              <p id="date" style="text-wrap: nowrap; color: #a9a9a9; font-size: var(--font-sm)">Fri, 20 sep</p>
               <p id="description">Make anything here as you want, even something longer.</p>
             </div>
           </div>
@@ -43,6 +44,10 @@ export class TodoCard extends OBC.SimpleUIComponent {
     const deleteBtn = new OBC.Button(this._components)
     deleteBtn.materialIcon = "delete"
     this.slots.actionButtons.addChild(deleteBtn)
-  }
 
+    // Evento de clic en el botón de eliminar
+    deleteBtn.onClick.add(() => {
+      this.onDeleteClick.trigger()
+    })
+  }
 }

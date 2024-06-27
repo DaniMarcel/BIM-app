@@ -9,20 +9,11 @@ export function ProjectCard(props: Props){
     return (
         <div className="project-card">
             <div className="card-header">
-            <p
-                style={{
-                backgroundColor: "#ca8134",
-                padding: 10,
-                borderRadius: 8,
-                aspectRatio: 1
-                }}
-            >
-                HC
-            </p>
-            <div>
-                <h5>{ props.project.name }</h5>
-                <p>{ props.project.description }</p>
-            </div>
+                <p style={{ backgroundColor: "#ca8134", padding: 10, borderRadius: 8, aspectRatio: 1 }}>HC</p>
+                <div>
+                    <h5>{ props.project.name }</h5>
+                    <p>{ props.project.description }</p>
+                </div>
             </div>
             <div className="card-content">
                 <div className="card-property">

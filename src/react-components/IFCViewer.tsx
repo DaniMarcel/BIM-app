@@ -111,7 +111,7 @@ export function IFCViewer() {
         }
 
         ifcLoader.onIfcLoaded.add(async (model) => {
-        exportFragments(model)
+        //exportFragments(model)
         onModelLoaded(model)
         })
 

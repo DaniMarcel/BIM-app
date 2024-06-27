@@ -36,7 +36,14 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     highlighter.add(`${TodoCreator.uuid}-priority-High`, [new THREE.MeshStandardMaterial({ color: 0xff7676 })])
   }
 
-  deleteTodo() {}
+  deleteTodo(todoToDelete: ToDo, todoCard: TodoCard) {
+    // Eliminar el ToDo de la lista
+    this._list = this._list.filter(todo => todo !== todoToDelete);
+
+    // Eliminar la tarjeta de la interfaz de usuario
+    const todoList = this.uiElement.get("todoList");
+    todoList.removeChild(todoCard);
+  }
 
   async addTodo(description: string, priority: ToDoPriority) {
     const camera = this._components.camera
@@ -78,6 +85,11 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
       if (fragmentMapLength === 0) {return}
       highlighter.highlightByID("select", todo.fragmentMap)
     })
+
+    todoCard.onDeleteClick.add(() => {
+      this.deleteTodo(todo, todoCard);
+    });
+
     const todoList = this.uiElement.get("todoList")
     todoList.addChild(todoCard)
   }
