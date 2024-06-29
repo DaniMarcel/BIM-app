@@ -3,6 +3,9 @@ import * as Router from "react-router-dom"
 import { ProjectsManager } from "../classes/ProjectsManager"
 import { IFCViewer } from "./IFCViewer"
 import { deleteDocument } from "../firebase"
+import { updateDocument } from "../firebase"
+import { IProject, ProjectStatus, UserRole } from "../classes/Project"
+
 
 interface Props {
     projectsManager: ProjectsManager
@@ -19,8 +22,88 @@ export function ProjectDetailsPage(props: Props) {
         navigateTo("/")
     }
 
+    const onEditProjectClick = () => {
+        const modal = document.getElementById("edit-project-modal")
+        if (!(modal && modal instanceof HTMLDialogElement)) {return}
+        modal.showModal()
+    }
+
+    const onFormSubit = (e: React.FormEvent) => {
+        e.preventDefault()
+        const projectForm = document.getElementById("edit-project-form")
+        if (!(projectForm && projectForm instanceof HTMLFormElement)) {return}
+        const formData = new FormData(projectForm)
+        const projectData: IProject = {
+            name: formData.get("name") as string,
+            description: formData.get("description") as string,
+            status: formData.get("status") as ProjectStatus,
+            userRole: formData.get("userRole") as UserRole,
+            finishDate: new Date(formData.get("finishDate") as string)
+        }
+        try {
+            console.log(projectData)
+            updateDocument<Partial<IProject>>("/projects", project.id, projectData)
+            projectForm.reset()
+            const modal = document.getElementById("edit-project-modal")
+            if (!(modal && modal instanceof HTMLDialogElement)) {return}
+            modal.close()
+        } catch (err) {
+            alert(err)
+        }
+    }
+
     return(
         <div className="page" id="project-details">
+            <dialog id="edit-project-modal">
+                <form onSubmit={(e) => onFormSubit(e)} id="edit-project-form">
+                    <h2>Edit Project</h2>
+                    <div className="input-list">
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">apartment</span>Name
+                            </label>
+                            <input name="name" type="text" placeholder="What's the name of your project?" defaultValue={project.name}/>
+                            <p style={{color: "gray", fontSize: "var(--font-sm)",marginTop: "5px",fontStyle: "italic"}}></p>
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">subject</span>Description
+                            </label>
+                            <textarea name="description" cols={30} rows={5} defaultValue={project.description}/>
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">person</span>Role
+                            </label>
+                            <select name="userRole" defaultValue={project.userRole}>
+                                <option>Architect</option>
+                                <option>Engineer</option>
+                                <option>Developer</option>
+                            </select>
+                        </div>
+                        <div className="form-field-container">
+                            <label>
+                                <span className="material-icons-round">not_listed_location</span>Status
+                            </label>
+                            <select name="status" defaultValue={project.status}>
+                                <option>Pending</option>
+                                <option>Active</option>
+                                <option>Finished</option>
+                            </select>
+                        </div>
+                        <div className="form-field-container">
+                            <label htmlFor="finishDate">
+                                <span className="material-icons-round">calendar_month</span>Finish Date
+                            </label>
+                            <input name="finishDate" type="date"   defaultValue={new Date(project.finishDate).toISOString().split('T')[0]} />
+                        </div>
+                        <div style={{ display: "flex", margin: "10px 0px 10px auto", columnGap: 10 }}>
+                            <button type="button" style={{ backgroundColor: "transparent" }}>Cancel</button>
+                            <button type="submit" style={{ backgroundColor: "rgb(18, 145, 18)" }}>Accept</button>
+                        </div>
+                    </div>
+                </form>
+            </dialog>
             <header>
                 <div>
                     <h2 data-project-info="name">{project.name}</h2>
@@ -34,7 +117,7 @@ export function ProjectDetailsPage(props: Props) {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "0px 30px", marginBottom: 30 }}>
                             <p style={{ fontSize: 20, backgroundColor: "#ca8134", aspectRatio: 1, borderRadius: "100%", padding: 12 }}>HC</p>
                             <button className="btn-secondary">
-                            <p style={{ width: "100%" }}>Edit</p>
+                            <p onClick={onEditProjectClick} style={{ width: "100%" }}>Edit</p>
                             </button>
                         </div>
                         <div style={{ padding: "0 30px" }}>

@@ -15,7 +15,6 @@ const projectsCollection = getCollection<IProject>("/projects")
 
 
 export function ProjectsPage(props: Props) {
-
     const [projects, setProjects] = React.useState<Project[]>(props.projectsManager.list)
     props.projectsManager.onProjectCreated = () => {setProjects([...props.projectsManager.list])}
 
