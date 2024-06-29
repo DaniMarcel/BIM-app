@@ -2,6 +2,7 @@ import * as React from "react"
 import * as Router from "react-router-dom"
 import { ProjectsManager } from "../classes/ProjectsManager"
 import { IFCViewer } from "./IFCViewer"
+import { deleteDocument } from "../firebase"
 
 interface Props {
     projectsManager: ProjectsManager
@@ -11,6 +12,12 @@ export function ProjectDetailsPage(props: Props) {
     if (!routeParams.id) {return (<p>Project ID is needed to see this page</p>)}
     const project = props.projectsManager.getProject(routeParams.id)
     if (!project) {return (<p>The project with ID {routeParams.id} wasn't found.</p>)}
+    
+    const navigateTo = Router.useNavigate()
+    props.projectsManager.onProjectDeleted = async (id) => {
+        await deleteDocument("/projects", id)
+        navigateTo("/")
+    }
 
     return(
         <div className="page" id="project-details">
@@ -19,6 +26,7 @@ export function ProjectDetailsPage(props: Props) {
                     <h2 data-project-info="name">{project.name}</h2>
                     <p style={{ color: "#969696" }}>{project.description}</p>
                 </div>
+                <button onClick={() => {props.projectsManager.deleteProject(project.id)}} style={{backgroundColor: "red"}}>Delete project</button>
             </header>
             <div className="main-page-content">
                 <div style={{ display: "flex", flexDirection: "column", rowGap: 30 }}>

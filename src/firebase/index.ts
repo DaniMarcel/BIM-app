@@ -1,7 +1,8 @@
+// Get Data
+import * as Firestore from "firebase/firestore"
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app";
-// Get Data
-import { getFirestore } from "firebase/firestore"
+import { IProject } from "../classes/Project";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -16,4 +17,20 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 // Get Documents
-export const firebaseDB = getFirestore()
+export const firestoreDB = Firestore.getFirestore()
+
+export function getCollection<T>(path: string) {
+  return Firestore.collection(firestoreDB, path) as Firestore.CollectionReference<T>
+}
+
+export async function deleteDocument(path: string, id: string) {
+  const doc = Firestore.doc(firestoreDB, `${path}/${id}`)
+  await Firestore.deleteDoc(doc)
+}
+
+export async function updateDocument<T extends Record<string, any>>(path: string, id: string, data: T) {
+  const doc = Firestore.doc(firestoreDB, `${path}/${id}`)
+  await Firestore.updateDoc(doc, data)
+}
+
+// updateDocument<Partial<IProject>>("/projects", "asd", {name: "New Name"})

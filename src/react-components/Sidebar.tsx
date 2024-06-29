@@ -14,7 +14,7 @@ export function Sidebar(){
                     <li><span className="material-symbols-outlined">apartment</span>Projects</li>
                 </Router.Link>
                 <Router.Link to="/project"></Router.Link>
-                <li><span className="material-symbols-outlined">group</span>Users</li>
+                {/* <li><span className="material-symbols-outlined">group</span>Users</li> */}
             </ul>
         </aside>
     )

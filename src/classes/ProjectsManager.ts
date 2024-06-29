@@ -2,7 +2,7 @@ import { IProject, Project } from "./Project"
 export class ProjectsManager{
     list: Project[] = []
     onProjectCreated = (project: Project) => {}
-    onProjectDeleted = () => {}
+    onProjectDeleted = (id: string) => {}
 
     constructor(){
 
@@ -44,7 +44,7 @@ export class ProjectsManager{
             return project.id !== id
         })
         this.list = remaining
-        this.onProjectDeleted()
+        this.onProjectDeleted(id)
     }
     
     
