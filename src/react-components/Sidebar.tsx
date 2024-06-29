@@ -1,7 +1,9 @@
 import * as React from "react"
 import * as Router from "react-router-dom"
+import { ViewerContext } from "./IFCViewer"
 
 export function Sidebar(){
+    const { viewer } = React.useContext(ViewerContext)
     return(
         <aside id="sidebar">
             <Router.Link to="/">
