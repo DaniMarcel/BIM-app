@@ -22,18 +22,10 @@ export class Project implements IProject{
     progress: number = 0
     id: string
 
-    constructor (data: IProject) {
+    constructor (data: IProject, id = uuidv4()) {
         for (const key in data){
             this[key] = data[key]
         }
-        //project data definition
-
-        // this.name = data.name
-        // this.description = data.description
-        // this.status = data.status
-        // this.userRole = data.userRole
-        // this.finishDate = data.finishDate
-        
-        this.id = uuidv4()
+        this.id = id
     }
 }
