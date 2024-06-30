@@ -4,7 +4,7 @@ import { TodoCard } from "./src/TodoCard"
 
 type ToDoPriority = "Low" | "Medium" | "High"
 
-interface ToDo {
+export interface ToDo {
   description: string
   date: Date
   fragmentMap: OBC.FragmentIdMap

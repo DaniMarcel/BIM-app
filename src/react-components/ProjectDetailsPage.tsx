@@ -2,20 +2,46 @@ import * as React from "react"
 import * as Router from "react-router-dom"
 import { ProjectsManager } from "../classes/ProjectsManager"
 import { IFCViewer } from "./IFCViewer"
+import { ViewerContext } from "./IFCViewer"
 import { deleteDocument } from "../firebase"
 import { updateDocument } from "../firebase"
 import { IProject, ProjectStatus, UserRole } from "../classes/Project"
+import { TodoCreator, ToDo } from "../bim-components/TodoCreator" // Asegúrate de importar el tipo ToDo
 
 
 interface Props {
     projectsManager: ProjectsManager
 }
 export function ProjectDetailsPage(props: Props) {
+    
+    const { viewer } = React.useContext(ViewerContext)
+    const [todos, setTodos] = React.useState<ToDo[]>([])
+
+    const fetchAndListTodos = async () => {
+        if (!viewer) { return }
+        const todoCreator = await viewer.tools.get(TodoCreator)
+        const todos = todoCreator.get() // Obtiene la lista de To-Do
+        setTodos(todos) // Actualiza el estado con la lista de To-Do
+    }
+    const createTodo = async () => {
+        if (!viewer) { return }
+        const todoCreator = await viewer.tools.get(TodoCreator)
+        await todoCreator.addTodo("Custom To-Do", "High")
+        fetchAndListTodos() // Refresca la lista de To-Do después de crear uno nuevo
+    }
+    
+    React.useEffect(() => {
+        fetchAndListTodos() // Obtiene la lista de To-Do cuando el componente se monta
+    }, [viewer])
+
+
+
     const routeParams = Router.useParams<{ id: string }>()
     if (!routeParams.id) {return (<p>Project ID is needed to see this page</p>)}
     const project = props.projectsManager.getProject(routeParams.id)
     if (!project) {return (<p>The project with ID {routeParams.id} wasn't found.</p>)}
-    
+
+
     const navigateTo = Router.useNavigate()
     props.projectsManager.onProjectDeleted = async (id) => {
         await deleteDocument("/projects", id)
@@ -150,7 +176,7 @@ export function ProjectDetailsPage(props: Props) {
                             </div>
                         </div>
                     </div>
-                    <div className="dashboard-card" style={{ flexGrow: 1 }}>
+                    <div className="dashboard-card" style={{ flexGrow: 1, height: "300px", overflowY: "scroll" }}>
                         <div style={{ padding: "20px 30px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                             <h4>To-Do</h4>
                             <div style={{ display: "flex", alignItems: "center", justifyContent: "end", columnGap: 20 }}>
@@ -158,19 +184,24 @@ export function ProjectDetailsPage(props: Props) {
                                     <span className="material-icons-round">search</span>
                                     <input type="text" placeholder="Search To-Do's by name" style={{ width: "100%" }}/>
                                 </div>
-                                <span className="material-icons-round">add</span>
+                                <button onClick={createTodo}>
+                                    <span className="material-icons-round">add</span>
+                                </button>
                             </div>
                         </div>
                         <div style={{ display: "flex", flexDirection: "column", padding: "10px 30px", rowGap: 20 }}>
-                            <div className="todo-item">
-                                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                                    <div style={{ display: "flex", columnGap: 15, alignItems: "center" }}>
-                                        <span className="material-icons-round" style={{ padding: 10, backgroundColor: "#686868", borderRadius: 10 }}> construction </span>
-                                        <p>Make anything here as you want, even something longer.</p>
+                            {todos.map((todo, index) => (
+                                <div className="todo-item" key={index}>
+                                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                                        <div style={{ display: "flex", columnGap: 15, alignItems: "center" }}>
+                                            <span className="material-icons-round" style={{ padding: 10, backgroundColor: "#686868", borderRadius: 10 }}> construction </span>
+                                            <p>{todo.description}</p>
+                                        </div>
+                                        <p style={{ marginLeft: 10 }}>{todo.date.toDateString()}</p>
+                                        <p style={{ marginLeft: 10, marginRight: 10 }}>{todo.priority}</p>
                                     </div>
-                                    <p style={{ marginLeft: 10 }}>Fri, 20 sep</p>
                                 </div>
-                            </div>
+                            ))}
                         </div>
                     </div>
                 </div>
