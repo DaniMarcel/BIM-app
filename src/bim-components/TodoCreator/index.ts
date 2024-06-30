@@ -1,10 +1,15 @@
 import * as OBC from "openbim-components"
 import * as THREE from "three"
+import * as Firestore from "firebase/firestore"
+import { firestoreDB } from "../../firebase"
 import { TodoCard } from "./src/TodoCard"
+import { getTodos } from "../../firebase"
+
 
 type ToDoPriority = "Low" | "Medium" | "High"
 
 export interface ToDo {
+  id: string
   description: string
   date: Date
   fragmentMap: OBC.FragmentIdMap
@@ -36,13 +41,14 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     highlighter.add(`${TodoCreator.uuid}-priority-High`, [new THREE.MeshStandardMaterial({ color: 0xff7676 })])
   }
 
+  
   deleteTodo(todoToDelete: ToDo, todoCard: TodoCard) {
     // Eliminar el ToDo de la lista
     this._list = this._list.filter(todo => todo !== todoToDelete);
 
     // Eliminar la tarjeta de la interfaz de usuario
     const todoList = this.uiElement.get("todoList");
-    todoList.removeChild(todoCard);
+    todoList.removeChild(todoCard)
   }
 
   async addTodo(description: string, priority: ToDoPriority) {
@@ -59,6 +65,7 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     
     const highlighter = await this._components.tools.get(OBC.FragmentHighlighter)
     const todo: ToDo = {
+      id: "",
       camera: todoCamera,
       description,
       date: new Date(),
