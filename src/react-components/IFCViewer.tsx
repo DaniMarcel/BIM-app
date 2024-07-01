@@ -2,6 +2,7 @@ import * as React from "react"
 import * as OBC from "openbim-components"
 import { FragmentsGroup } from "bim-fragment"
 import { TodoCreator } from "../bim-components/TodoCreator"
+import { addIFCFile } from "../firebase"
 
 interface IViewerContext {
     viewer: OBC.Components | null
@@ -25,6 +26,7 @@ export function ViewerProvider(props: {children: React.ReactNode}) {
 export function IFCViewer() {
     const { setViewer } = React.useContext(ViewerContext)
     let viewer: OBC.Components
+
     const createViewer = async () => {
         viewer = new OBC.Components()
         setViewer(viewer)
@@ -51,21 +53,22 @@ export function IFCViewer() {
         rendererComponent.postproduction.enabled = true
 
         const fragmentManager = new OBC.FragmentManager(viewer)
+
         function exportFragments(model: FragmentsGroup) {
-        const fragmentBinary = fragmentManager.export(model)
-        const blob = new Blob([fragmentBinary])
-        const url = URL.createObjectURL(blob)
-        const a = document.createElement('a')
-        a.href = url
-        a.download = `${model.name.replace(".ifc", "")}.frag`
-        a.click()
-        URL.revokeObjectURL(url)
+            const fragmentBinary = fragmentManager.export(model)
+            const blob = new Blob([fragmentBinary])
+            const url = URL.createObjectURL(blob)
+            const a = document.createElement('a')
+            a.href = url
+            a.download = `${model.name.replace(".ifc", "")}.frag`
+            a.click()
+            URL.revokeObjectURL(url)
         }
 
         const ifcLoader = new OBC.FragmentIfcLoader(viewer)
         ifcLoader.settings.wasm = {
-        path: "https://unpkg.com/web-ifc@0.0.43/",
-        absolute: true
+            path: "https://unpkg.com/web-ifc@0.0.43/",
+            absolute: true
         }
 
         const highlighter = new OBC.FragmentHighlighter(viewer)
@@ -73,7 +76,7 @@ export function IFCViewer() {
 
         const propertiesProcessor = new OBC.IfcPropertiesProcessor(viewer)
         highlighter.events.select.onClear.add(() => {
-        propertiesProcessor.cleanPropertiesList()
+            propertiesProcessor.cleanPropertiesList()
         })
 
         const classifier = new OBC.FragmentClassifier(viewer)
@@ -86,59 +89,59 @@ export function IFCViewer() {
         classificationsBtn.materialIcon = "account_tree"
 
         classificationsBtn.onClick.add(() => {
-        classificationWindow.visible = !classificationWindow.visible
-        classificationsBtn.active = classificationWindow.visible
+            classificationWindow.visible = !classificationWindow.visible
+            classificationsBtn.active = classificationWindow.visible
         })
 
         async function createModelTree() {
-        const fragmentTree = new OBC.FragmentTree(viewer)
-        await fragmentTree.init()
-        await fragmentTree.update(["storeys", "entities"])
-        fragmentTree.onHovered.add((fragmentMap) => {
-            highlighter.highlightByID("hover", fragmentMap)
-        })
-        fragmentTree.onSelected.add((fragmentMap) => {
-            highlighter.highlightByID("select", fragmentMap)
-        })
-        const tree = fragmentTree.get().uiElement.get("tree")
-        return tree
+            const fragmentTree = new OBC.FragmentTree(viewer)
+            await fragmentTree.init()
+            await fragmentTree.update(["storeys", "entities"])
+            fragmentTree.onHovered.add((fragmentMap) => {
+                highlighter.highlightByID("hover", fragmentMap)
+            })
+            fragmentTree.onSelected.add((fragmentMap) => {
+                highlighter.highlightByID("select", fragmentMap)
+            })
+            const tree = fragmentTree.get().uiElement.get("tree")
+            return tree
         }
 
         const culler = new OBC.ScreenCuller(viewer)
         cameraComponent.controls.addEventListener("sleep", () => {
-        culler.needsUpdate = true
+            culler.needsUpdate = true
         })
 
         async function onModelLoaded(model: FragmentsGroup) {
-        highlighter.update()
-        for (const fragment of model.items) {culler.add(fragment.mesh)}
-        culler.needsUpdate = true
+            highlighter.update()
+            for (const fragment of model.items) {culler.add(fragment.mesh)}
+            culler.needsUpdate = true
 
-        try {
-            classifier.byStorey(model)
-            classifier.byEntity(model)
-            const tree = await createModelTree()
-            await classificationWindow.slots.content.dispose(true)
-            classificationWindow.addChild(tree)
-        
-            propertiesProcessor.process(model)
-            highlighter.events.select.onHighlight.add((fragmentMap) => {
-            const expressID = [...Object.values(fragmentMap)[0]][0]
-            propertiesProcessor.renderProperties(model, Number(expressID))
-            })
-        } catch (error) {
-            alert(error)
-        }
+            try {
+                classifier.byStorey(model)
+                classifier.byEntity(model)
+                const tree = await createModelTree()
+                await classificationWindow.slots.content.dispose(true)
+                classificationWindow.addChild(tree)
+            
+                propertiesProcessor.process(model)
+                highlighter.events.select.onHighlight.add((fragmentMap) => {
+                    const expressID = [...Object.values(fragmentMap)[0]][0]
+                    propertiesProcessor.renderProperties(model, Number(expressID))
+                })
+            } catch (error) {
+                alert(error)
+            }
         }
 
         ifcLoader.onIfcLoaded.add(async (model) => {
-        //exportFragments(model)
-        onModelLoaded(model)
+            exportFragments(model)
+            onModelLoaded(model)
         })
 
         fragmentManager.onFragmentsLoaded.add((model) => {
-        model.properties = {} //Get this from a JSON file exported from the IFC first load!
-        onModelLoaded(model)
+            model.properties = {} // Get this from a JSON file exported from the IFC first load!
+            onModelLoaded(model)
         })
 
         const importFragmentBtn = new OBC.Button(viewer)
@@ -146,22 +149,22 @@ export function IFCViewer() {
         importFragmentBtn.tooltip = "Load FRAG"
 
         importFragmentBtn.onClick.add(() => {
-        const input = document.createElement('input')
-        input.type = 'file'
-        input.accept = '.frag'
-        const reader = new FileReader()
-        reader.addEventListener("load", async () => {
-            const binary = reader.result
-            if (!(binary instanceof ArrayBuffer)) { return }
-            const fragmentBinary = new Uint8Array(binary)
-            await fragmentManager.load(fragmentBinary)
-        })
-        input.addEventListener('change', () => {
-            const filesList = input.files
-            if (!filesList) { return }
-            reader.readAsArrayBuffer(filesList[0])
-        })
-        input.click()
+            const input = document.createElement('input')
+            input.type = 'file'
+            input.accept = '.frag'
+            const reader = new FileReader()
+            reader.addEventListener("load", async () => {
+                const binary = reader.result
+                if (!(binary instanceof ArrayBuffer)) { return }
+                const fragmentBinary = new Uint8Array(binary)
+                await fragmentManager.load(fragmentBinary)
+            })
+            input.addEventListener('change', () => {
+                const filesList = input.files
+                if (!filesList) { return }
+                reader.readAsArrayBuffer(filesList[0])
+            })
+            input.click()
         })
 
         const todoCreator = new TodoCreator(viewer)
@@ -169,14 +172,27 @@ export function IFCViewer() {
 
         const toolbar = new OBC.Toolbar(viewer)
         toolbar.addChild(
-        ifcLoader.uiElement.get("main"),
-        importFragmentBtn,
-        classificationsBtn,
-        propertiesProcessor.uiElement.get("main"),
-        todoCreator.uiElement.get("activationButton"),
-        fragmentManager.uiElement.get("main")
+            ifcLoader.uiElement.get("main"),
+            importFragmentBtn,
+            classificationsBtn,
+            propertiesProcessor.uiElement.get("main"),
+            todoCreator.uiElement.get("activationButton"),
+            fragmentManager.uiElement.get("main")
         )
         viewer.ui.addToolbar(toolbar)
+    }
+
+    const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+        const input = event.target
+        if (input.files && input.files[0]) {
+            const file = input.files[0]
+            await addIFCFile('your_project_id', file)  // Reemplaza 'your_project_id' con tu ID de proyecto real
+        }
+    }
+
+    const triggerFileUpload = () => {
+        const input = document.getElementById('ifc-upload-input') as HTMLInputElement
+        input.click()
     }
 
     React.useEffect(() => {
@@ -188,10 +204,30 @@ export function IFCViewer() {
     }, [])
 
     return (
-        <div
-            id="viewer-container"
-            className="dashboard-card"
-            style={{ minWidth: 0, position: "relative" }}
-        />
+        <div style={{ position: 'relative' }}>
+            <div
+                id="viewer-container"
+                className="dashboard-card"
+                style={{ minWidth: 0,minHeight:0, position: "relative" }}
+            />
+            <input
+                type="file"
+                accept=".ifc"
+                onChange={handleFileUpload}
+                style={{ display: 'none' }} // Ocultar el input
+                id="ifc-upload-input"
+            />
+            <button
+                onClick={triggerFileUpload}
+                style={{
+                    position: 'absolute',
+                    top: '10px',
+                    right: '10px',
+                    zIndex: 1
+                }}
+            >
+                Upload IFC File
+            </button>
+        </div>
     )
 }

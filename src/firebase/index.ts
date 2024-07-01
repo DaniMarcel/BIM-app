@@ -3,6 +3,7 @@ import * as Firestore from "firebase/firestore"
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
 import { getDocs, collection, addDoc } from "firebase/firestore" // Asegúrate de importar getDocs y collection desde Firestore
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage"
 import { ToDo } from "../bim-components/TodoCreator"
 
 // Your web app's Firebase configuration
@@ -19,6 +20,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig)
 // Get Documents
 export const firestoreDB = Firestore.getFirestore()
+const storage = getStorage(app)
 
 export function getCollection<T>(path: string) {
   return Firestore.collection(firestoreDB, path) as Firestore.CollectionReference<T>
@@ -75,5 +77,40 @@ export async function addTodoF(projectId: string, todo: { description: string; d
   }
 }
 
+// Function to add IFC file
+export async function addIFCFile(projectId: string, file: File) {
+  const storageRef = ref(storage, `projects/1QFfgmVzqlkERobuOqYi/IFCModels/${file.name}`)
+  try {
+    // Upload the file to Firebase Storage
+    const snapshot = await uploadBytes(storageRef, file)
+    // Get the file's URL
+    const downloadURL = await getDownloadURL(snapshot.ref)
 
-// updateDocument<Partial<IProject>>("/projects", "asd", {name: "New Name"})
+    // Save the file information in Firestore
+    const ifcCollectionRef = collection(firestoreDB, `/projects/1QFfgmVzqlkERobuOqYi/IFCModels`)
+    await addDoc(ifcCollectionRef, {
+      name: file.name,
+      url: downloadURL,
+      uploadedAt: Firestore.Timestamp.now()
+    })
+
+    console.log("IFC file uploaded successfully!")
+  } catch (e) {
+    console.error("Error uploading IFC file: ", e)
+  }
+}
+
+export async function getIFCFiles(projectId: string): Promise<string[]> {
+  const ifcCollectionRef = collection(firestoreDB, `/projects/1QFfgmVzqlkERobuOqYi/IFCModels`)
+  const querySnapshot = await getDocs(ifcCollectionRef)
+
+  const fileUrls: string[] = []
+  querySnapshot.forEach((doc) => {
+    const data = doc.data()
+    if (data.url) {
+      fileUrls.push(data.url)
+    }
+  })
+
+  return fileUrls
+}

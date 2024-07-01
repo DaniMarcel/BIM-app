@@ -203,11 +203,13 @@ input:focus, textarea:focus, select:focus {
 /* Project details page */
 .dashboard-card {
     background-color: var(--background-100);
-    border-radius: 8px;
+    border-radius: 30px;
     display: flex;
     flex-direction: column;
 }
-
+#viewer-container {
+    height: 800px;
+}
 #project-details > .main-page-content {
     display: grid;
     padding: 20px 40px;

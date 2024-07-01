@@ -41,7 +41,6 @@ export function ProjectDetailsPage(props: Props) {
           setTodos(todos) // Actualiza el estado con la lista de To-Do
           todos.map(async (todo) => {
             await createTodo(todo.description, todo.priority, todo.id, todo.projectId)
-            console.log(todo)
           })
         } catch (error) {
           console.error("Error fetching todos:", error)
