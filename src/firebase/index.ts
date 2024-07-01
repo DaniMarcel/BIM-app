@@ -77,9 +77,9 @@ export async function addTodoF(projectId: string, todo: { description: string; d
   }
 }
 
-// Function to add IFC file
+// Function to add IFC file, 1QFfgmVzqlkERobuOqYi
 export async function addIFCFile(projectId: string, file: File) {
-  const storageRef = ref(storage, `projects/1QFfgmVzqlkERobuOqYi/IFCModels/${file.name}`)
+  const storageRef = ref(storage, `projects/${projectId}/IFCModels/${file.name}`)
   try {
     // Upload the file to Firebase Storage
     const snapshot = await uploadBytes(storageRef, file)
@@ -87,7 +87,7 @@ export async function addIFCFile(projectId: string, file: File) {
     const downloadURL = await getDownloadURL(snapshot.ref)
 
     // Save the file information in Firestore
-    const ifcCollectionRef = collection(firestoreDB, `/projects/1QFfgmVzqlkERobuOqYi/IFCModels`)
+    const ifcCollectionRef = collection(firestoreDB, `/projects/${projectId}/IFCModels`)
     await addDoc(ifcCollectionRef, {
       name: file.name,
       url: downloadURL,
@@ -101,7 +101,7 @@ export async function addIFCFile(projectId: string, file: File) {
 }
 
 export async function getIFCFiles(projectId: string): Promise<string[]> {
-  const ifcCollectionRef = collection(firestoreDB, `/projects/1QFfgmVzqlkERobuOqYi/IFCModels`)
+  const ifcCollectionRef = collection(firestoreDB, `/projects/${projectId}/IFCModels`)
   const querySnapshot = await getDocs(ifcCollectionRef)
 
   const fileUrls: string[] = []

@@ -251,7 +251,7 @@ export function ProjectDetailsPage(props: Props) {
             </div>
           </div>
         </div>
-                <IFCViewer />
+                <IFCViewer projectId={routeParams.id}/>
             </div>
         </div>
     )

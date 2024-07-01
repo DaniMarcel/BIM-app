@@ -208,7 +208,7 @@ input:focus, textarea:focus, select:focus {
     flex-direction: column;
 }
 #viewer-container {
-    height: 800px;
+    height: 780px;
 }
 #project-details > .main-page-content {
     display: grid;

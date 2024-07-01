@@ -23,7 +23,11 @@ export function ViewerProvider(props: {children: React.ReactNode}) {
     )
 }
 
-export function IFCViewer() {
+interface IFCViewerProps {
+    projectId: string;
+}
+
+export function IFCViewer({ projectId }: IFCViewerProps) {
     const { setViewer } = React.useContext(ViewerContext)
     let viewer: OBC.Components
 
@@ -186,7 +190,7 @@ export function IFCViewer() {
         const input = event.target
         if (input.files && input.files[0]) {
             const file = input.files[0]
-            await addIFCFile('your_project_id', file)  // Reemplaza 'your_project_id' con tu ID de proyecto real
+            await addIFCFile(projectId, file)
         }
     }
 
