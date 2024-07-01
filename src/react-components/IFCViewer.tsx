@@ -2,7 +2,7 @@ import * as React from "react"
 import * as OBC from "openbim-components"
 import { FragmentsGroup } from "bim-fragment"
 import { TodoCreator } from "../bim-components/TodoCreator"
-import { addIFCFile } from "../firebase"
+import { addIFCFile, getIFCFiles } from "../firebase"
 
 interface IViewerContext {
     viewer: OBC.Components | null
@@ -14,15 +14,14 @@ export const ViewerContext = React.createContext<IViewerContext>({
     setViewer: () => {}
 })
 
-export function ViewerProvider(props: {children: React.ReactNode}) {
+export function ViewerProvider(props: { children: React.ReactNode }) {
     const [viewer, setViewer] = React.useState<OBC.Components | null>(null)
     return (
-        <ViewerContext.Provider value={{viewer, setViewer}}>
+        <ViewerContext.Provider value={{ viewer, setViewer }}>
             {props.children}
         </ViewerContext.Provider>
     )
 }
-
 interface IFCViewerProps {
     projectId: string;
 }
@@ -118,7 +117,7 @@ export function IFCViewer({ projectId }: IFCViewerProps) {
 
         async function onModelLoaded(model: FragmentsGroup) {
             highlighter.update()
-            for (const fragment of model.items) {culler.add(fragment.mesh)}
+            for (const fragment of model.items) { culler.add(fragment.mesh) }
             culler.needsUpdate = true
 
             try {
@@ -127,7 +126,7 @@ export function IFCViewer({ projectId }: IFCViewerProps) {
                 const tree = await createModelTree()
                 await classificationWindow.slots.content.dispose(true)
                 classificationWindow.addChild(tree)
-            
+
                 propertiesProcessor.process(model)
                 highlighter.events.select.onHighlight.add((fragmentMap) => {
                     const expressID = [...Object.values(fragmentMap)[0]][0]
@@ -184,13 +183,38 @@ export function IFCViewer({ projectId }: IFCViewerProps) {
             fragmentManager.uiElement.get("main")
         )
         viewer.ui.addToolbar(toolbar)
+
+        // Load existing IFC files from Firestore and add them to the viewer
+        const ifcFileUrls = await getIFCFiles(projectId)
+
+        if (ifcFileUrls.length === 0) {
+            console.warn("No IFC files found in the storage.")
+        } else {
+            ifcFileUrls.forEach(async (url) => {
+                try {
+                    // Extract the filename from the URL
+                    const fileName = url.split('/').pop()
+                    if (fileName) {
+                        // Fetch the file as an ArrayBuffer
+                        const response = await fetch(url)
+                        const arrayBuffer = await response.arrayBuffer()
+                        const uint8Array = new Uint8Array(arrayBuffer)
+        
+                        // Load the IFC file into the viewer
+                        await ifcLoader.load(uint8Array, fileName)
+                    }
+                } catch (error) {
+                    console.error('Error loading IFC file:', error)
+                }
+            })
+        }
     }
 
     const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
         const input = event.target
         if (input.files && input.files[0]) {
             const file = input.files[0]
-            await addIFCFile(projectId, file)
+            await addIFCFile(projectId, file)  // Use the projectId prop here
         }
     }
 
@@ -212,13 +236,13 @@ export function IFCViewer({ projectId }: IFCViewerProps) {
             <div
                 id="viewer-container"
                 className="dashboard-card"
-                style={{ minWidth: 0,minHeight:0, position: "relative" }}
+                style={{ minWidth: 0, minHeight: 0, position: "relative" }}
             />
             <input
                 type="file"
                 accept=".ifc"
                 onChange={handleFileUpload}
-                style={{ display: 'none' }} // Ocultar el input
+                style={{ display: 'none' }} // Hide the input
                 id="ifc-upload-input"
             />
             <button
