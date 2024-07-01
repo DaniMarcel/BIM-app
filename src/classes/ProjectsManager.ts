@@ -1,3 +1,4 @@
+import { deleteDocument } from "../firebase"
 import { IProject, Project } from "./Project"
 export class ProjectsManager{
     list: Project[] = []
@@ -40,8 +41,12 @@ export class ProjectsManager{
         const remaining = this.list.filter((project) =>{
             return project.id !== id
         })
+        console.log(this.list)
         this.list = remaining
+        deleteDocument("/projects", id)
         this.onProjectDeleted(id)
+        console.log(this.list)
+
     }
     setProject(id: string, data: Partial<IProject>) {
         const project = this.getProject(id)

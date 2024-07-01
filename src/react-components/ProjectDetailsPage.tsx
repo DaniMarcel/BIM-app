@@ -21,6 +21,7 @@ export function ProjectDetailsPage(props: Props) {
     if (!routeParams.id) {return (<p>Project ID is needed to see this page</p>)}
     const project = props.projectsManager.getProject(routeParams.id)
     if (!project) {return (<p>The project with ID {routeParams.id} wasn't found.</p>)}
+    
 
     //Firebase ToDo
     const createTodo = async (description: string, priority, id: string,projectId) => {
@@ -48,8 +49,8 @@ export function ProjectDetailsPage(props: Props) {
       }
     
     React.useEffect(() => {
-    fetchTodos()
-    }, [viewer])
+        fetchTodos()
+    }, [viewer, routeParams.id])
 
     const navigateTo = Router.useNavigate()
     props.projectsManager.onProjectDeleted = async (id) => {
@@ -78,7 +79,7 @@ export function ProjectDetailsPage(props: Props) {
         try {
             console.log(projectData)
             updateDocument<Partial<IProject>>("/projects", project.id, projectData)
-            props.projectsManager.setProject(project.id,projectData)
+            props.projectsManager.setProject(project.id, projectData)
             projectForm.reset()
             const modal = document.getElementById("edit-project-modal")
             if (!(modal && modal instanceof HTMLDialogElement)) {return}
@@ -134,7 +135,13 @@ export function ProjectDetailsPage(props: Props) {
                             <input name="finishDate" type="date"   defaultValue={new Date(project.finishDate).toISOString().split('T')[0]} />
                         </div>
                         <div style={{ display: "flex", margin: "10px 0px 10px auto", columnGap: 10 }}>
-                            <button type="button" style={{ backgroundColor: "transparent" }}>Cancel</button>
+                        <button type="button" onClick={() => { 
+                            const modal = document.getElementById("edit-project-modal")
+                            if (modal && modal instanceof HTMLDialogElement) {
+                                modal.close()
+                            }
+                        }} style={{ backgroundColor: "transparent" }}>Cancel
+                        </button>
                             <button type="submit" style={{ backgroundColor: "rgb(18, 145, 18)" }}>Accept</button>
                         </div>
                     </div>

@@ -33,9 +33,7 @@ export function ProjectsPage(props: Props) {
         }
     }
 
-    React.useEffect(() => {
-        getFirestoreProjects()
-    }, [])
+
 
     const projectCards = projects.map((project) => {
         return (
@@ -45,7 +43,7 @@ export function ProjectsPage(props: Props) {
     })
 
     React.useEffect(() => {
-        console.log("Projects state updated", projects)
+        getFirestoreProjects()
     }, [projects])
 
     const onNewProjectClick = () => {
@@ -129,7 +127,13 @@ export function ProjectsPage(props: Props) {
                             <input name="finishDate" type="date" />
                         </div>
                         <div style={{ display: "flex", margin: "10px 0px 10px auto", columnGap: 10 }}>
-                            <button type="button" style={{ backgroundColor: "transparent" }}>Cancel</button>
+                            <button type="button" onClick={() =>{
+                                const modal = document.getElementById("new-project-modal")
+                                if (modal && modal instanceof HTMLDialogElement) {
+                                    modal.close()
+                                }
+                            }} style={{ backgroundColor: "transparent" }}>Cancel
+                            </button>
                             <button type="submit" style={{ backgroundColor: "rgb(18, 145, 18)" }}>Accept</button>
                         </div>
                     </div>
