@@ -78,6 +78,7 @@ export function ProjectDetailsPage(props: Props) {
         try {
             console.log(projectData)
             updateDocument<Partial<IProject>>("/projects", project.id, projectData)
+            props.projectsManager.setProject(project.id,projectData)
             projectForm.reset()
             const modal = document.getElementById("edit-project-modal")
             if (!(modal && modal instanceof HTMLDialogElement)) {return}

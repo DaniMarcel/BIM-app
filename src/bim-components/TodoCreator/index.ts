@@ -7,7 +7,7 @@ import * as Firestore from "firebase/firestore"
 import { firestoreDB } from "../../firebase"
 import { IProject } from "../../classes/Project"
 import { TodoCard } from "./src/TodoCard"
-import { getTodos, getCollection, addTodoF } from "../../firebase"
+import { getTodos, getCollection, addTodoF, deleteTodo } from "../../firebase"
 import { getFirestore } from "firebase/firestore"
 
 
@@ -51,6 +51,7 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
   
   deleteTodo(todoToDelete: ToDo, todoCard: TodoCard) {
     // Eliminar el ToDo de la lista
+    deleteTodo(todoToDelete.projectId, todoToDelete.id)
     this._list = this._list.filter(todo => todo !== todoToDelete);
 
     // Eliminar la tarjeta de la interfaz de usuario

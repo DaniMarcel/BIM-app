@@ -3,10 +3,7 @@ export class ProjectsManager{
     list: Project[] = []
     onProjectCreated = (project: Project) => {}
     onProjectDeleted = (id: string) => {}
-
-    constructor(){
-
-    }
+    onProjectEdit = (id: string) => {}
 
     filterProjects(value: string) {
         const filteredProjects = this.list.filter((project) => {
@@ -45,6 +42,18 @@ export class ProjectsManager{
         })
         this.list = remaining
         this.onProjectDeleted(id)
+    }
+    setProject(id: string, data: Partial<IProject>) {
+        const project = this.getProject(id)
+        if (!project) {
+            throw new Error(`Project with ID ${id} not found`)
+        }
+        if (data.name) project.name = data.name
+        if (data.description) project.description = data.description
+        if (data.status) project.status = data.status
+        if (data.userRole) project.userRole = data.userRole
+        if (data.finishDate) project.finishDate = data.finishDate
+        this.onProjectEdit(id)
     }
     
     
