@@ -67,6 +67,8 @@ export function ProjectsPage(props: Props) {
         }
         try {
             Firestore.addDoc(projectsCollection, projectData)
+            console.log(projectsCollection)
+            console.log(projectData)
             const project = props.projectsManager.newProject(projectData)
             projectForm.reset()
             const modal = document.getElementById("new-project-modal")

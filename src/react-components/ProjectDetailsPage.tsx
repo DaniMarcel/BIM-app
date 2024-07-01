@@ -6,7 +6,7 @@ import { ViewerContext } from "./IFCViewer"
 import { deleteDocument, updateDocument} from "../firebase";
 import { IProject, ProjectStatus, UserRole } from "../classes/Project"
 import { TodoCreator, ToDo } from "../bim-components/TodoCreator" // Asegúrate de importar el tipo ToDo
-import { getCollection, getTodos } from "../firebase"
+import { getCollection, getTodos, addTodoF } from "../firebase"
 
 interface Props {
     projectsManager: ProjectsManager
@@ -17,51 +17,39 @@ export function ProjectDetailsPage(props: Props) {
     const { viewer } = React.useContext(ViewerContext)
     const [todos, setTodos] = React.useState<ToDo[]>([])
 
-    //Firebase ToDo
-
-
-    const fetchAndListTodos = async () => {
-        if (!viewer) { return }
-        const todoCreator = await viewer.tools.get(TodoCreator)
-        const todos = todoCreator.get() // Obtiene la lista de To-Do
-        setTodos(todos) // Actualiza el estado con la lista de To-Do
-    }
-    const createTodo = async () => {
-        if (!viewer) { return }
-        const todoCreator = await viewer.tools.get(TodoCreator)
-        await todoCreator.addTodo("Custom To-Do", "High")
-        fetchAndListTodos() // Refresca la lista de To-Do después de crear uno nuevo
-    }
-    
-
-
-
-
     const routeParams = Router.useParams<{ id: string }>()
     if (!routeParams.id) {return (<p>Project ID is needed to see this page</p>)}
     const project = props.projectsManager.getProject(routeParams.id)
     if (!project) {return (<p>The project with ID {routeParams.id} wasn't found.</p>)}
 
+    //Firebase ToDo
+    const createTodo = async (description: string, priority, id: string,projectId) => {
+        if (!viewer) { return }
+        const todoCreator = await viewer.tools.get(TodoCreator)
+        await todoCreator.addTodo(description, priority, id, projectId)
+    }
 
     async function fetchTodos() {
         if (!routeParams.id) {
-          console.error("Project ID is undefined");
-          return;
+          console.error("Project ID is undefined")
+          return
         }
-    
         try {
-          const todos = await getTodos(routeParams.id);
-          console.log(todos); // Aquí puedes acceder a los datos devueltos por la promesa
-          setTodos(todos); // Actualiza el estado con la lista de To-Do
+          const todos = await getTodos(routeParams.id)
+          console.log(todos) // Aquí puedes acceder a los datos devueltos por la promesa
+          setTodos(todos) // Actualiza el estado con la lista de To-Do
+          todos.map(async (todo) => {
+            await createTodo(todo.description, todo.priority, todo.id, todo.projectId)
+            console.log(todo)
+          })
         } catch (error) {
-          console.error("Error fetching todos:", error);
+          console.error("Error fetching todos:", error)
         }
       }
     
-      React.useEffect(() => {
-        fetchAndListTodos(); // Obtiene la lista de To-Do cuando el componente se monta
-        fetchTodos();
-      }, [viewer, routeParams.id]);
+    React.useEffect(() => {
+    fetchTodos()
+    }, [viewer])
 
     const navigateTo = Router.useNavigate()
     props.projectsManager.onProjectDeleted = async (id) => {
@@ -205,7 +193,7 @@ export function ProjectDetailsPage(props: Props) {
                                     <span className="material-icons-round">search</span>
                                     <input type="text" placeholder="Search To-Do's by name" style={{ width: "100%" }}/>
                                 </div>
-                                <button onClick={createTodo}>
+                                <button>
                                     <span className="material-icons-round">add</span>
                                 </button>
                             </div>

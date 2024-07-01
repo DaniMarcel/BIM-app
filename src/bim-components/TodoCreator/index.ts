@@ -1,12 +1,18 @@
+import * as React from "react"
+import * as Router from "react-router-dom"
 import * as OBC from "openbim-components"
 import * as THREE from "three"
+import { ProjectsManager } from "../../classes/ProjectsManager"
 import * as Firestore from "firebase/firestore"
 import { firestoreDB } from "../../firebase"
+import { IProject } from "../../classes/Project"
 import { TodoCard } from "./src/TodoCard"
-import { getTodos } from "../../firebase"
+import { getTodos, getCollection, addTodoF } from "../../firebase"
+import { getFirestore } from "firebase/firestore"
 
 
 type ToDoPriority = "Low" | "Medium" | "High"
+
 
 export interface ToDo {
   id: string
@@ -15,6 +21,7 @@ export interface ToDo {
   fragmentMap: OBC.FragmentIdMap
   camera: { position: THREE.Vector3, target: THREE.Vector3 }
   priority: ToDoPriority
+  projectId: string
 }
 
 export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
@@ -51,7 +58,7 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     todoList.removeChild(todoCard)
   }
 
-  async addTodo(description: string, priority: ToDoPriority) {
+  async addTodo(description: string, priority: ToDoPriority, id: string, projectId) {
     const camera = this._components.camera
     if (!(camera instanceof OBC.OrthoPerspectiveCamera)) {
       throw new Error("TodoCreator needs the OrthoPerspectiveCamera in order to work")
@@ -64,8 +71,10 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     const todoCamera = { position, target }
     
     const highlighter = await this._components.tools.get(OBC.FragmentHighlighter)
+    
     const todo: ToDo = {
-      id: "",
+      id,
+      projectId,
       camera: todoCamera,
       description,
       date: new Date(),
@@ -128,9 +137,29 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     form.slots.content.get().style.rowGap = "20px"
 
     form.onAccept.add(() => {
-      this.addTodo(descriptionInput.value, priorityDropdown.value as ToDoPriority)
+      console.log(this._list[0])
+      const firstTodo = this._list[0]
+      const projectId = firstTodo ? firstTodo.projectId : null
+      const randomId = this.generateUniqueId()
+      // Obtén los valores de los inputs
+      const description = descriptionInput.value
+      const priority = priorityDropdown.value as ToDoPriority
+      // Añade el nuevo ToDo
+      this.addTodo(description, priority, randomId, projectId)
+      // Limpia los inputs y oculta el formulario
       descriptionInput.value = ""
       form.visible = false
+      // Asegúrate de pasar los valores correctos a addTodo
+      if (projectId) {
+        const todoData = {
+          description: description,
+          date: new Date(),  // Usamos la fecha actual para este ejemplo
+          priority: priority
+        }
+        addTodoF(projectId, todoData)
+      }else {
+        console.error("El ID del proyecto no está definido.")
+      }
     })
     
     form.onCancel.add(() => form.visible = false)
@@ -172,6 +201,9 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     this.uiElement.set({activationButton, todoList})
   }
 
+  private generateUniqueId(): string {
+    return '_' + Math.random().toString(36)
+  }
   get(): ToDo[] {
     return this._list
   }

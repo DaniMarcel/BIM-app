@@ -2,10 +2,8 @@
 import * as Firestore from "firebase/firestore"
 // Import the functions you need from the SDKs you need
 import { initializeApp } from "firebase/app"
-import { getDocs, collection } from "firebase/firestore" // Asegúrate de importar getDocs y collection desde Firestore
-import { IProject } from "../classes/Project"
+import { getDocs, collection, addDoc } from "firebase/firestore" // Asegúrate de importar getDocs y collection desde Firestore
 import { ToDo } from "../bim-components/TodoCreator"
-
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -15,47 +13,66 @@ const firebaseConfig = {
   storageBucket: "bim-dev-app-e0acb.appspot.com",
   messagingSenderId: "962220324993",
   appId: "1:962220324993:web:5fa317a24911a6c639b580"
-};
+}
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig)
 // Get Documents
 export const firestoreDB = Firestore.getFirestore()
 
 export function getCollection<T>(path: string) {
   return Firestore.collection(firestoreDB, path) as Firestore.CollectionReference<T>
 }
-
 export async function deleteDocument(path: string, id: string) {
   const doc = Firestore.doc(firestoreDB, `${path}/${id}`)
   await Firestore.deleteDoc(doc)
 }
+export async function updateDocument<T extends Record<string, any>>(path: string, id: string, data: T) {
+  const doc = Firestore.doc(firestoreDB, `${path}/${id}`)
+  await Firestore.updateDoc(doc, data)
+}
+
+
+// To-Do
 export async function getTodos(projectId: string): Promise<ToDo[]> {
-  const todosCollectionRef = collection(firestoreDB, `/projects/${projectId}/ToDo`);
-  const querySnapshot = await getDocs(todosCollectionRef);
+  const todosCollectionRef = collection(firestoreDB, `/projects/${projectId}/ToDo`)
+  const querySnapshot = await getDocs(todosCollectionRef)
   
-  const todos: ToDo[] = [];
+  const todos: ToDo[] = []
   querySnapshot.forEach((doc) => {
-    const data = doc.data();
+    const data = doc.data()
     todos.push({
       id: doc.id,
       description: data.description,
       date: data.date.toDate ? data.date.toDate() : new Date(data.date), // Convierte a Date
       fragmentMap: data.fragmentMap,
       camera: data.camera,
-      priority: data.priority
-    } as ToDo);
-  });
+      priority: data.priority,
+      projectId: projectId
+    } as ToDo)
+  })
 
-  return todos;
+  return todos
 }
-
-
-export async function updateDocument<T extends Record<string, any>>(path: string, id: string, data: T) {
-  const doc = Firestore.doc(firestoreDB, `${path}/${id}`)
-  await Firestore.updateDoc(doc, data)
+export async function deleteTodo(projectId: string, todoId: string) {
+  const docRef = Firestore.doc(firestoreDB, `/projects/${projectId}/ToDo/${todoId}`)
+  await Firestore.deleteDoc(docRef)
 }
-
+export async function addTodoF(projectId: string, todo: { description: string; date: Date; priority: string }) {
+  const todosCollectionRef = collection(firestoreDB, `/projects/${projectId}/ToDo`);
+  
+  const newTodo = {
+    description: todo.description,
+    date: Firestore.Timestamp.fromDate(todo.date), // Convierte la fecha a un Timestamp de Firestore
+    priority: todo.priority
+  }
+  try {
+    await addDoc(todosCollectionRef, newTodo)
+    console.log("ToDo added successfully!")
+  } catch (e) {
+    console.error("Error adding ToDo: ", e)
+  }
+}
 
 
 // updateDocument<Partial<IProject>>("/projects", "asd", {name: "New Name"})
