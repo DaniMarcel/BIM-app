@@ -62,8 +62,7 @@ export async function deleteTodo(projectId: string, todoId: string) {
   await Firestore.deleteDoc(docRef)
 }
 export async function addTodoF(projectId: string, todo: { description: string; date: Date; priority: string }) {
-  const todosCollectionRef = collection(firestoreDB, `/projects/${projectId}/ToDo`);
-  
+  const todosCollectionRef = collection(firestoreDB, `/projects/${projectId}/ToDo`)
   const newTodo = {
     description: todo.description,
     date: Firestore.Timestamp.fromDate(todo.date), // Convierte la fecha a un Timestamp de Firestore

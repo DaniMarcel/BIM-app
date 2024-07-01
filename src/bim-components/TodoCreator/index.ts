@@ -9,6 +9,7 @@ import { IProject } from "../../classes/Project"
 import { TodoCard } from "./src/TodoCard"
 import { getTodos, getCollection, addTodoF, deleteTodo } from "../../firebase"
 import { getFirestore } from "firebase/firestore"
+import { ProjectDetailsPage } from "../../react-components/ProjectDetailsPage"
 
 
 type ToDoPriority = "Low" | "Medium" | "High"
@@ -52,7 +53,7 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
   deleteTodo(todoToDelete: ToDo, todoCard: TodoCard) {
     // Eliminar el ToDo de la lista
     deleteTodo(todoToDelete.projectId, todoToDelete.id)
-    this._list = this._list.filter(todo => todo !== todoToDelete);
+    this._list = this._list.filter(todo => todo !== todoToDelete)
 
     // Eliminar la tarjeta de la interfaz de usuario
     const todoList = this.uiElement.get("todoList");
@@ -71,8 +72,14 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     camera.controls.getTarget(target)
     const todoCamera = { position, target }
     
-    const highlighter = await this._components.tools.get(OBC.FragmentHighlighter)
     
+    const highlighter = await this._components.tools.get(OBC.FragmentHighlighter)
+
+    const existingTodo = this._list.find(todo => todo.id === id);
+    if (existingTodo) {
+        console.warn('Todo with the same description and project already exists. Skipping addition.');
+        return; // No agregamos el ToDo si ya existe uno igual
+    }
     const todo: ToDo = {
       id,
       projectId,

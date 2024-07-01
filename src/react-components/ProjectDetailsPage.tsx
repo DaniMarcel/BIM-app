@@ -62,6 +62,15 @@ export function ProjectDetailsPage(props: Props) {
         if (!(modal && modal instanceof HTMLDialogElement)) {return}
         modal.showModal()
     }
+    const handleAddTodo = () => {
+        const todoData = {
+            description: "Corregir Modelo",
+            date: new Date(),  // Fecha actual
+            priority: "Low"
+        }
+        addTodoF(project.id, todoData)
+        fetchTodos()
+    }
 
     const onFormSubit = (e: React.FormEvent) => {
         e.preventDefault()
@@ -200,7 +209,7 @@ export function ProjectDetailsPage(props: Props) {
                                     <span className="material-icons-round">search</span>
                                     <input type="text" placeholder="Search To-Do's by name" style={{ width: "100%" }}/>
                                 </div>
-                                <button>
+                                <button onClick={handleAddTodo} >
                                     <span className="material-icons-round">add</span>
                                 </button>
                             </div>
