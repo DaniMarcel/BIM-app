@@ -75,10 +75,11 @@ export class TodoCreator extends OBC.Component<ToDo[]> implements OBC.UI {
     
     const highlighter = await this._components.tools.get(OBC.FragmentHighlighter)
 
-    const existingTodo = this._list.find(todo => todo.id === id);
+    // Comprobar si el ToDo ya existe en la lista
+    const existingTodo = this._list.find(todo => todo.id === id)
     if (existingTodo) {
-        console.warn('Todo with the same description and project already exists. Skipping addition.');
-        return; // No agregamos el ToDo si ya existe uno igual
+        console.warn('Todo with the same ID already exists. Skipping addition.')
+        return // No agregar el ToDo si ya existe uno con el mismo ID
     }
     const todo: ToDo = {
       id,
